@@ -1,1 +1,1 @@
-# Applied-Data-Science-P2
+# Energy Market and Battery Optimisation
