@@ -119,7 +119,7 @@ def GetMinMax(data, region = 'VIC', buy_threshold = 5, sell_threshold = 4):
         selected_max_price[maximum_price[i]] = s_t + 1
         i += 1
 
-    return selected_min_price, selected_max_price
+    return selected_min_price, selected_max_price  
 
 ########################################################################################
 
