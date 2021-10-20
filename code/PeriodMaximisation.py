@@ -123,6 +123,27 @@ def GetMinMax(data, region = 'VIC', buy_threshold = 5, sell_threshold = 4):
 
 ########################################################################################
 
+def getMinMax2(minimum_price, maximum_price, buy_threshold, sell_threshold):
+    selected_min_price = [EMPTY for i in minimum_price] # (O(N)), set an empty array for the whole period.
+    selected_max_price = [EMPTY for i in minimum_price] # (O(N)), set an empty array for the whole period.
+
+    # Select the lowest price spot over the given
+    # buy_threshold as the minimum buying point.
+    i = 0
+    for b_t in range(buy_threshold):
+        selected_min_price[minimum_price[i]] = b_t + 1
+        i += 1
+
+    # Select the highest price spot over the given
+    # sell_threshold as the maximum selling point.
+    i = 0
+    for s_t in range(sell_threshold):
+        selected_max_price[maximum_price[i]] = s_t + 1
+        i += 1
+
+    return selected_min_price, selected_max_price
+
+########################################################################################
 def FindBatteryPairs(buy_period, sell_period):
     '''
     A function to Find Battery Charge and Discharge pairs in backward order.
@@ -310,12 +331,17 @@ def PeriodOptimisation(given_data, region = "VIC"):
 
     period = len(given_data)
 
+    spot_price = GetSpotPrice(given_data, region = region)
+
+    minimum_price = np.argsort(spot_price, kind = 'merge*sort')
+    maximum_price = minimum_price[::-1][:len(spot_price)]
+
     # Iterate over all possible combinations of battery pairs. (O(0.5N^2))
     # O(N^2 + NLogN)
     for s in range(1, period + 1):
         for b in range(1 , period + 1 - s):
             # Get the minimum and maximum price based on the given threshold
-            min_price, max_price = GetMinMax(given_data, buy_threshold = b, sell_threshold = s, region = region)
+            min_price, max_price = getMinMax2(minimum_price, maximum_price, buy_threshold = b, sell_threshold = s)
             # Get the battery pairs based on minimum and maximum price
             battery_pairs = FindBatteryPairs(min_price, max_price)
             # Get battery optimisation for the selected threshold
@@ -717,11 +743,17 @@ def localOptimisation(dataframe, region = "VIC"):
     period = len(dataframe)
     best_batteries = OrderedDict()
 
+    spot_price = GetSpotPrice(given_data, region = region)
+
+    minimum_price = np.argsort(spot_price, kind = 'merge*sort')
+    maximum_price = minimum_price[::-1][:len(spot_price)]
+
     # Iterate over all possible combinations of battery pairs. (O(0.5N^2))
     # O(N^2 + NLogN)
-    for s in range(1, len(dataframe) + 1):
-        for b in range(1, len(dataframe) + 1 - s):
-            min_price, max_price = GetMinMax(dataframe, buy_threshold = b, sell_threshold = s, region = region)
+    for s in range(1, period + 1):
+        for b in range(1 , period + 1 - s):
+            # Get the minimum and maximum price based on the given threshold
+            min_price, max_price = getMinMax2(minimum_price, maximum_price, buy_threshold = b, sell_threshold = s)
             battery_pairs = findBatteryPairsReverse(min_price, max_price, dataframe)
             all_batteries = SetChargeDischargeReverse(dataframe, battery_pairs, region = region)
             dailyrev = ComputeDailyRevenue(all_batteries)
